@@ -1,0 +1,13 @@
+Análisis de Correlación
+==================================================
+
+Correlaciones significativas (|corr| > 0.7):
+
+Correlaciones con Profitability_Class_Encoded:
+Profitability_Class_Encoded    1.000000
+Fiscal_Year                    0.003464
+Month                         -0.000395
+Is_Holiday_Season             -0.092452
+Typical_Weight_Per_Unit       -0.171976
+Lead_Time_Days                -0.256657
+Tax_Rate                      -0.564295
