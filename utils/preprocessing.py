@@ -3,6 +3,8 @@ import numpy as np
 from sklearn.preprocessing import LabelEncoder, RobustScaler
 from imblearn.combine import SMOTETomek
 from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 def preprocesar_datos(df):
     """
@@ -41,7 +43,7 @@ def preprocesar_datos(df):
     
     # 6. Escalamiento robusto para variables numéricas
     columnas_numericas = ['Lead Time Days', 'Typical Weight Per Unit', 'Product_Base_Price',
-                         'Month', 'Fiscal Year', 'Quantity', 'Tax Rate']
+                         'Month', 'Fiscal Year', 'Quantity']
     
     scaler = RobustScaler()
     X[columnas_numericas] = scaler.fit_transform(X[columnas_numericas])
