@@ -38,15 +38,6 @@ def analizar_datos(df):
     plt.title('Matriz de Correlación - Variables Numéricas')
     plt.tight_layout()
     plt.show()
-    
-    # Análisis de outliers
-    fig, axes = plt.subplots(2, 2, figsize=(15, 10))
-    sns.boxplot(data=df, y='Lead Time Days', ax=axes[0,0])
-    sns.boxplot(data=df, y='Product_Base_Price', ax=axes[0,1])
-    sns.boxplot(data=df, y='Typical Weight Per Unit', ax=axes[1,0])
-    sns.boxplot(data=df, y='Quantity', ax=axes[1,1])
-    plt.tight_layout()
-    plt.show()
 
 def verificar_preprocesamiento(resultados):
     """
