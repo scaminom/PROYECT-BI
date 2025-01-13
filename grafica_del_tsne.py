@@ -6,11 +6,11 @@ import seaborn as sns
 
 # 1. Cargar los datos procesados
 print("Cargando datos...")
-df = pd.read_csv('processed_order_profitability.csv')
+df = pd.read_csv('datos/train_processed.csv')
 
 # 2. Separar features y etiquetas
-X = df.drop(['Profitability_Class', 'Profitability_Class_Encoded'], axis=1)
-y = df['Profitability_Class_Encoded']
+X = df.drop(['Season'], axis=1)
+y = df['Season']
 
 # 3. Aplicar t-SNE
 print("Aplicando t-SNE (esto puede tomar algunos minutos)...")
@@ -27,7 +27,7 @@ X_tsne = tsne.fit_transform(X)
 tsne_data = pd.DataFrame({
     'x': X_tsne[:, 0],
     'y': X_tsne[:, 1],
-    'class': df['Profitability_Class']  # Usamos las etiquetas originales para mejor interpretación
+    'class': df['Season']  # Usamos las etiquetas originales para mejor interpretación
 })
 
 # 5. Crear la visualización

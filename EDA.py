@@ -3,10 +3,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from utils.preprocessing import preprocesar_datos, guardar_datos_preprocesados
+import os
 
 def analizar_datos(df):
     """
-    Realiza el análisis exploratorio de datos
+    Realiza el análisis exploratorio de datos para el dataset de demanda
     """
     print("\n=== Información básica del dataset ===")
     print(df.info())
@@ -21,11 +22,11 @@ def analizar_datos(df):
     print("\n=== Estadísticas descriptivas ===")
     print(df.describe())
     
-    # Distribución de clases
+    # Distribución de temporadas
     plt.figure(figsize=(10, 6))
-    df['Profitability_Class'].value_counts().plot(kind='bar')
-    plt.title('Distribución de Clases de Rentabilidad')
-    plt.xlabel('Clase')
+    df['Season'].value_counts().plot(kind='bar')
+    plt.title('Distribución de Temporadas')
+    plt.xlabel('Temporada')
     plt.ylabel('Cantidad')
     plt.xticks(rotation=45)
     plt.tight_layout()
@@ -39,17 +40,33 @@ def analizar_datos(df):
     plt.tight_layout()
     plt.show()
 
+    # Análisis de ventas por temporada
+    plt.figure(figsize=(12, 6))
+    sns.boxplot(x='Season', y='Total_Sales_Amount', data=df)
+    plt.title('Distribución de Ventas por Temporada')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+    # Análisis de cantidad vendida por mes
+    plt.figure(figsize=(12, 6))
+    sns.barplot(x='Month', y='Total_Quantity_Sold', data=df)
+    plt.title('Cantidad Vendida por Mes')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
 def verificar_preprocesamiento(resultados):
     """
     Verifica los resultados del preprocesamiento
     """
     print("\n=== Verificación del Preprocesamiento ===")
     
-    # Distribución de clases en entrenamiento
-    print("\nDistribución de clases en el conjunto de entrenamiento:")
+    # Distribución de temporadas en entrenamiento
+    print("\nDistribución de temporadas en el conjunto de entrenamiento:")
     clases_unicas, conteos = np.unique(resultados['y_train'], return_counts=True)
     for clase, conteo in zip(clases_unicas, conteos):
-        print(f"Clase {clase}: {conteo} muestras")
+        print(f"Temporada {clase}: {conteo} muestras")
     
     # Formas de los conjuntos
     print("\nFormas de los conjuntos de datos:")
@@ -72,7 +89,7 @@ def main():
     try:
         # Cargar datos
         print("Cargando datos...")
-        df = pd.read_csv('order_profitability.csv')  # Ajusta el nombre del archivo según sea necesario
+        df = pd.read_csv('demanda_producto.csv', sep=';')
         
         # Realizar análisis exploratorio
         print("\nRealizando análisis exploratorio...")
@@ -87,7 +104,7 @@ def main():
         
         # Guardar datos preprocesados
         print("\nGuardando datos preprocesados...")
-        # guardar_datos_preprocesados(resultados)
+        guardar_datos_preprocesados(resultados)
         
         print("\n¡Proceso completado con éxito!")
         
