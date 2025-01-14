@@ -1,3 +1,5 @@
-neural-network/
 datos/
+/datos/
+**/__pycache__/
+neural-network/
 utils/__pycache__/
