@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder, RobustScaler, OneHotEncoder
-from imblearn.combine import SMOTETomek
 from sklearn.model_selection import train_test_split
 import pickle
 import os
@@ -103,30 +102,16 @@ def preprocesar_datos(df):
         X, y, test_size=0.2, random_state=42, stratify=y
     )
     
-    # 9. Balanceo de clases
-    print("\nAplicando balanceo de clases...")
-    print("Distribución antes del balanceo:")  
-    print(pd.Series(y_train).value_counts())
-    
-    smote_tomek = SMOTETomek(random_state=42)
-    X_train_balanced, y_train_balanced = smote_tomek.fit_resample(X_train, y_train)
-    
-    print("\nDistribución después del balanceo:")
-    print(pd.Series(y_train_balanced).value_counts())
-
-    # 10. Conversión final a DataFrame
-    X_train_balanced = pd.DataFrame(X_train_balanced, columns=X_train.columns)
-    
-    print("\n=== Preprocesamiento y balanceo completados ===") 
+    print("\n=== Preprocesamiento completado ===") 
     print(f"Dimensiones finales:")
-    print(f"X_train: {X_train_balanced.shape}") 
+    print(f"X_train: {X_train.shape}") 
     print(f"X_test: {X_test.shape}")
     
     return {
         'df_completo': df_proc,
-        'X_train': X_train_balanced, 
+        'X_train': X_train, 
         'X_test': X_test,
-        'y_train': y_train_balanced,
+        'y_train': y_train,
         'y_test': y_test, 
         'label_encoders': label_encoders,
         'label_encoder_y': label_encoder_y, 
