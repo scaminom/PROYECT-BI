@@ -6,11 +6,11 @@ import seaborn as sns
 
 # 1. Cargar los datos procesados
 print("Cargando datos...")
-df = pd.read_csv('datos/train_processed.csv')
+df = pd.read_csv('datos/dataset_procesado.csv')
 
 # 2. Separar features y etiquetas
-X = df.drop(['Season'], axis=1)
-y = df['Season']
+X = df.drop(['Season_Code', 'Season'], axis=1)
+y = df['Season_Code']
 
 # 3. Aplicar t-SNE
 print("Aplicando t-SNE (esto puede tomar algunos minutos)...")
