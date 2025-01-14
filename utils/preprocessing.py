@@ -40,8 +40,7 @@ def preprocesar_datos(df):
     label_encoders = {}
     
     # Identificar columnas para diferentes tipos de encoding 
-    columnas_onehot = ['Thickness', 'Weather_Resistance', 'Target_Gender',
-                      'Price_Category', 'Fit_Type']
+    columnas_onehot = []
     columnas_label = [col for col in columnas_categoricas
                      if col != 'Season' and col not in columnas_onehot]
     

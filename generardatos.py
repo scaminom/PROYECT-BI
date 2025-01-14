@@ -1,8 +1,35 @@
-
 import numpy as np
 import pandas as pd
 from datetime import datetime
 from scipy.stats import chi2_contingency
+
+def calculate_cramers_v(x, y):
+    """
+    Calcula el coeficiente V de Cramér para variables categóricas
+    """
+    confusion_matrix = pd.crosstab(x, y)
+    chi2 = chi2_contingency(confusion_matrix)[0]
+    n = confusion_matrix.sum().sum()
+    min_dim = min(confusion_matrix.shape) - 1
+    return np.sqrt(chi2 / (n * min_dim)) if min_dim > 0 else 0
+
+def corregir_combinacion(row):
+    """
+    Corrige combinaciones inválidas en los datos
+    """
+    if row['Season'] == 'Summer' and row['Thermal_Rating'] in ['Muy Alto', 'Alto']:
+        return pd.Series({
+            'Season': 'Winter',
+            'Thermal_Rating': row['Thermal_Rating'],
+            'Thickness': 'Grueso'
+        })
+    elif row['Season'] == 'Winter' and row['Product_Category'] == 'Swimwear':
+        return pd.Series({
+            'Season': 'Summer',
+            'Thermal_Rating': 'Bajo',
+            'Thickness': 'Ligero'
+        })
+    return row
 
 def generar_dataset_completo(n_samples=95060, random_state=42):
     """
@@ -10,86 +37,85 @@ def generar_dataset_completo(n_samples=95060, random_state=42):
     """
     np.random.seed(random_state)
     
-    # 1. Características base del producto con pesos más diferenciados por temporada
+    # 1. Características base del producto con pesos más diferenciados
     product_categories = {
         'Outerwear': {
             'items': ['Chaquetas', 'Abrigos', 'Impermeables', 'Chalecos'],
             'season_weights': {
-                'Winter': 0.8,
-                'Fall': 0.15,
-                'Spring': 0.05,
-                'Summer': 0.0
+                'Winter': 0.90,
+                'Fall': 0.08,
+                'Spring': 0.02,
+                'Summer': 0.00
             }
         },
         'Tops': {
             'items': ['Camisetas', 'Blusas', 'Polos', 'Sudaderas'],
             'season_weights': {
-                'Winter': 0.1,
-                'Fall': 0.2,
-                'Spring': 0.3,
-                'Summer': 0.4
+                'Winter': 0.05,
+                'Fall': 0.15,
+                'Spring': 0.35,
+                'Summer': 0.45
             }
         },
         'Bottoms': {
             'items': ['Pantalones', 'Shorts', 'Faldas', 'Jeans'],
             'season_weights': {
-                'Winter': 0.4,
-                'Fall': 0.3,
-                'Spring': 0.2,
-                'Summer': 0.1
+                'Winter': 0.45,
+                'Fall': 0.35,
+                'Spring': 0.15,
+                'Summer': 0.05
             }
         },
         'Dresses': {
             'items': ['Vestidos Casual', 'Vestidos Formal', 'Vestidos Playa'],
             'season_weights': {
                 'Winter': 0.05,
-                'Fall': 0.15,
-                'Spring': 0.3,
-                'Summer': 0.5
+                'Fall': 0.10,
+                'Spring': 0.35,
+                'Summer': 0.50
             }
         },
         'Activewear': {
             'items': ['Tops Deportivos', 'Leggings', 'Shorts Deportivos'],
             'season_weights': {
-                'Winter': 0.1,
-                'Fall': 0.2,
-                'Spring': 0.3,
-                'Summer': 0.4
+                'Winter': 0.15,
+                'Fall': 0.20,
+                'Spring': 0.30,
+                'Summer': 0.35
             }
         },
         'Swimwear': {
             'items': ['Trajes de Baño', 'Bikinis', 'Pareos'],
             'season_weights': {
-                'Winter': 0.0,
-                'Fall': 0.0,
-                'Spring': 0.2,
-                'Summer': 0.8
+                'Winter': 0.00,
+                'Fall': 0.00,
+                'Spring': 0.15,
+                'Summer': 0.85
             }
         },
         'Accessories': {
             'items': ['Gorros', 'Bufandas', 'Guantes', 'Sombreros'],
             'season_weights': {
-                'Winter': 0.6,
-                'Fall': 0.25,
-                'Spring': 0.1,
-                'Summer': 0.05
+                'Winter': 0.70,
+                'Fall': 0.20,
+                'Spring': 0.08,
+                'Summer': 0.02
             }
         }
     }
     
-    # Asignar temporadas con distribución controlada
+    # Distribución más realista por temporada
     season_distribution = {
-        'Winter': int(n_samples * 0.25),
-        'Spring': int(n_samples * 0.25),
-        'Summer': int(n_samples * 0.25),
-        'Fall': int(n_samples * 0.25)
+        'Winter': int(n_samples * 0.35),
+        'Summer': int(n_samples * 0.30),
+        'Fall': int(n_samples * 0.20),
+        'Spring': int(n_samples * 0.15)
     }
     
     seasons = []
     for season, count in season_distribution.items():
         seasons.extend([season] * count)
     
-    # Ajustar por si hay diferencia debido a redondeo
     while len(seasons) < n_samples:
         seasons.append(np.random.choice(list(season_distribution.keys())))
     
@@ -100,38 +126,32 @@ def generar_dataset_completo(n_samples=95060, random_state=42):
     subcategories = []
     
     for season in seasons:
-        # Ajustar probabilidades según temporada
         category_probs = {
             cat: info['season_weights'][season]
             for cat, info in product_categories.items()
         }
         
-        # Fortalecer las probabilidades dominantes
         max_prob = max(category_probs.values())
         for k in category_probs:
             if category_probs[k] == max_prob:
-                category_probs[k] *= 1.2  # Aumentar probabilidad dominante
+                category_probs[k] *= 1.5
         
-        # Normalizar probabilidades
         total = sum(category_probs.values())
         category_probs = {k: v/total for k, v in category_probs.items()}
         
-        # Seleccionar categoría
         cat = np.random.choice(
             list(category_probs.keys()),
             p=list(category_probs.values())
         )
         categories.append(cat)
         
-        # Seleccionar subcategoría con coherencia estacional
         if season in ['Winter', 'Fall']:
-            weights = [2.0 if item in ['Abrigos', 'Chaquetas', 'Pantalones'] else 1.0 
+            weights = [3.0 if item in ['Abrigos', 'Chaquetas', 'Pantalones'] else 1.0 
                       for item in product_categories[cat]['items']]
         else:
-            weights = [2.0 if item in ['Shorts', 'Vestidos Playa', 'Tops Deportivos'] else 1.0 
+            weights = [3.0 if item in ['Shorts', 'Vestidos Playa', 'Tops Deportivos'] else 1.0 
                       for item in product_categories[cat]['items']]
         
-        # Normalizar pesos
         weights = [w/sum(weights) for w in weights]
         
         subcat = np.random.choice(
@@ -140,24 +160,24 @@ def generar_dataset_completo(n_samples=95060, random_state=42):
         )
         subcategories.append(subcat)
     
-    # 2. Características del material con mayor diferenciación estacional
+    # 2. Materiales con mayor coherencia estacional
     materials = {
         'Natural': {
             'items': ['Algodón', 'Lana', 'Lino', 'Seda'],
             'season_weights': {
-                'Winter': {'Lana': 0.7, 'Algodón': 0.2, 'Seda': 0.1, 'Lino': 0.0},
-                'Summer': {'Lino': 0.5, 'Algodón': 0.4, 'Seda': 0.1, 'Lana': 0.0},
-                'Spring': {'Algodón': 0.5, 'Lino': 0.3, 'Seda': 0.2, 'Lana': 0.0},
-                'Fall': {'Lana': 0.5, 'Algodón': 0.3, 'Seda': 0.1, 'Lino': 0.1}
+                'Winter': {'Lana': 0.85, 'Algodón': 0.10, 'Seda': 0.05, 'Lino': 0.00},
+                'Summer': {'Lino': 0.60, 'Algodón': 0.35, 'Seda': 0.05, 'Lana': 0.00},
+                'Spring': {'Algodón': 0.50, 'Lino': 0.30, 'Seda': 0.20, 'Lana': 0.00},
+                'Fall': {'Lana': 0.60, 'Algodón': 0.25, 'Seda': 0.10, 'Lino': 0.05}
             }
         },
         'Sintético': {
             'items': ['Poliéster', 'Nylon', 'Spandex'],
-            'season_props': {'Winter': 0.4, 'Summer': 0.3, 'Spring': 0.2, 'Fall': 0.1}
+            'season_props': {'Winter': 0.45, 'Summer': 0.25, 'Spring': 0.15, 'Fall': 0.15}
         },
         'Técnico': {
             'items': ['Gore-Tex', 'Dri-FIT', 'Thinsulate'],
-            'season_props': {'Winter': 0.6, 'Summer': 0.1, 'Spring': 0.1, 'Fall': 0.2}
+            'season_props': {'Winter': 0.70, 'Summer': 0.05, 'Spring': 0.10, 'Fall': 0.15}
         }
     }
     
@@ -165,19 +185,18 @@ def generar_dataset_completo(n_samples=95060, random_state=42):
     material_types = []
     
     for cat, season in zip(categories, seasons):
-        # Ajustar pesos según categoría y temporada
         if cat in ['Outerwear', 'Activewear']:
             if season in ['Winter', 'Fall']:
-                mat_weights = {'Sintético': 0.2, 'Técnico': 0.6, 'Natural': 0.2}
+                mat_weights = {'Sintético': 0.15, 'Técnico': 0.75, 'Natural': 0.10}
             else:
-                mat_weights = {'Sintético': 0.4, 'Técnico': 0.4, 'Natural': 0.2}
+                mat_weights = {'Sintético': 0.40, 'Técnico': 0.45, 'Natural': 0.15}
         elif cat == 'Swimwear':
-            mat_weights = {'Sintético': 0.9, 'Técnico': 0.1, 'Natural': 0.0}
+            mat_weights = {'Sintético': 0.95, 'Técnico': 0.05, 'Natural': 0.00}
         else:
             if season in ['Summer', 'Spring']:
-                mat_weights = {'Natural': 0.7, 'Sintético': 0.2, 'Técnico': 0.1}
+                mat_weights = {'Natural': 0.80, 'Sintético': 0.15, 'Técnico': 0.05}
             else:
-                mat_weights = {'Natural': 0.5, 'Sintético': 0.3, 'Técnico': 0.2}
+                mat_weights = {'Natural': 0.60, 'Sintético': 0.25, 'Técnico': 0.15}
         
         mat_cat = np.random.choice(
             list(mat_weights.keys()),
@@ -185,19 +204,18 @@ def generar_dataset_completo(n_samples=95060, random_state=42):
         )
         material_categories.append(mat_cat)
         
-        # Selección de material específico con mayor coherencia
         if mat_cat == 'Natural':
             weights = materials['Natural']['season_weights'][season]
         elif mat_cat == 'Técnico':
             if season == 'Winter':
-                weights = {'Gore-Tex': 0.4, 'Thinsulate': 0.5, 'Dri-FIT': 0.1}
+                weights = {'Gore-Tex': 0.35, 'Thinsulate': 0.60, 'Dri-FIT': 0.05}
             else:
-                weights = {'Dri-FIT': 0.6, 'Gore-Tex': 0.3, 'Thinsulate': 0.1}
+                weights = {'Dri-FIT': 0.70, 'Gore-Tex': 0.25, 'Thinsulate': 0.05}
         else:
             if cat == 'Swimwear':
-                weights = {'Nylon': 0.5, 'Spandex': 0.4, 'Poliéster': 0.1}
+                weights = {'Nylon': 0.60, 'Spandex': 0.35, 'Poliéster': 0.05}
             else:
-                weights = {'Poliéster': 0.4, 'Nylon': 0.3, 'Spandex': 0.3}
+                weights = {'Poliéster': 0.50, 'Nylon': 0.25, 'Spandex': 0.25}
         
         mat_type = np.random.choice(
             list(weights.keys()),
@@ -211,105 +229,110 @@ def generar_dataset_completo(n_samples=95060, random_state=42):
     thermal_rating = []
     
     for cat, season, mat in zip(categories, seasons, material_types):
-        # Grosor con reglas más estrictas
         if season == 'Winter':
             if cat in ['Outerwear', 'Accessories']:
-                thick_weights = {'Grueso': 0.8, 'Medio': 0.2, 'Ligero': 0.0}
+                thick_weights = {'Grueso': 0.85, 'Medio': 0.15, 'Ligero': 0.00}
             else:
-                thick_weights = {'Grueso': 0.5, 'Medio': 0.4, 'Ligero': 0.1}
+                thick_weights = {'Grueso': 0.60, 'Medio': 0.35, 'Ligero': 0.05}
         elif season == 'Summer':
-            thick_weights = {'Ligero': 0.8, 'Medio': 0.2, 'Grueso': 0.0}
+            thick_weights = {'Ligero': 0.85, 'Medio': 0.15, 'Grueso': 0.00}
         else:
-            thick_weights = {'Medio': 0.6, 'Ligero': 0.3, 'Grueso': 0.1}
+            thick_weights = {'Medio': 0.70, 'Ligero': 0.20, 'Grueso': 0.10}
         
         thickness.append(np.random.choice(
             list(thick_weights.keys()),
             p=list(thick_weights.values())
         ))
         
-        # Impermeabilidad con reglas más específicas
         if cat == 'Outerwear' or mat == 'Gore-Tex':
             if season in ['Winter', 'Fall']:
-                water_weights = {'Impermeable': 0.8, 'Repelente': 0.2, 'No': 0.0}
+                water_weights = {'Impermeable': 0.85, 'Repelente': 0.15, 'No': 0.00}
             else:
-                water_weights = {'Impermeable': 0.5, 'Repelente': 0.4, 'No': 0.1}
+                water_weights = {'Impermeable': 0.60, 'Repelente': 0.35, 'No': 0.05}
         elif cat == 'Swimwear':
-            water_weights = {'Repelente': 0.9, 'No': 0.1, 'Impermeable': 0.0}
+            water_weights = {'Repelente': 0.95, 'No': 0.05, 'Impermeable': 0.00}
         else:
-            water_weights = {'No': 0.7, 'Repelente': 0.2, 'Impermeable': 0.1}
+            water_weights = {'No': 0.80, 'Repelente': 0.15, 'Impermeable': 0.05}
         
         waterproof.append(np.random.choice(
             list(water_weights.keys()),
             p=list(water_weights.values())
         ))
         
-        # Rating térmico con mayor coherencia
         if season == 'Winter':
             if cat in ['Outerwear', 'Accessories']:
-                thermal_weights = {'Muy Alto': 0.6, 'Alto': 0.3, 'Medio': 0.1}
+                thermal_weights = {'Muy Alto': 0.70, 'Alto': 0.25, 'Medio': 0.05}
             else:
-                thermal_weights = {'Alto': 0.5, 'Medio': 0.4, 'Bajo': 0.1}
+                thermal_weights = {'Alto': 0.60, 'Medio': 0.35, 'Bajo': 0.05}
         elif season == 'Summer':
-            thermal_weights = {'Bajo': 0.9, 'Medio': 0.1}
+            thermal_weights = {'Bajo': 0.95, 'Medio': 0.05}
         else:
-            thermal_weights = {'Medio': 0.6, 'Bajo': 0.3, 'Alto': 0.1}
+            thermal_weights = {'Medio': 0.70, 'Bajo': 0.20, 'Alto': 0.10}
         
         thermal_rating.append(np.random.choice(
             list(thermal_weights.keys()),
             p=list(thermal_weights.values())
         ))
     
-    # 4. Características de diseño más distintivas por temporada
+    # 4. Características de diseño más distintivas
     color_families = []
     patterns = []
     styles = []
     
-    for season in seasons:
-        # Color con mayor diferenciación estacional
+    style_mapping = {
+        ('Winter', 'Outerwear'): {'Formal': 0.50, 'Casual': 0.30, 'Deportivo': 0.20},
+        ('Summer', 'Swimwear'): {'Playa': 0.70, 'Deportivo': 0.20, 'Casual': 0.10},
+        ('Spring', 'Dresses'): {'Casual': 0.40, 'Formal': 0.30, 'Playa': 0.30}
+    }
+    
+    for season, cat in zip(seasons, categories):
         if season == 'Summer':
-            color_weights = {'Vibrante': 0.5, 'Pastel': 0.3, 'Neutro': 0.2, 'Oscuro': 0.0}
+            color_weights = {'Vibrante': 0.55, 'Pastel': 0.30, 'Neutro': 0.15, 'Oscuro': 0.00}
         elif season == 'Winter':
-            color_weights = {'Oscuro': 0.5, 'Neutro': 0.3, 'Vibrante': 0.1, 'Pastel': 0.1}
+            color_weights = {'Oscuro': 0.55, 'Neutro': 0.35, 'Vibrante': 0.07, 'Pastel': 0.03}
         elif season == 'Spring':
-            color_weights = {'Pastel': 0.4, 'Vibrante': 0.3, 'Neutro': 0.2, 'Oscuro': 0.1}
-        else:  # Fall
-            color_weights = {'Neutro': 0.4, 'Oscuro': 0.3, 'Vibrante': 0.2, 'Pastel': 0.1}
+            color_weights = {'Pastel': 0.45, 'Vibrante': 0.35, 'Neutro': 0.15, 'Oscuro': 0.05}
+        else:
+            color_weights = {'Neutro': 0.45, 'Oscuro': 0.35, 'Vibrante': 0.15, 'Pastel': 0.05}
         
         color_families.append(np.random.choice(
             list(color_weights.keys()),
             p=list(color_weights.values())
         ))
         
-        # Patrón con mayor coherencia estacional
         if season == 'Summer':
-            pattern_weights = {'Floral': 0.4, 'Estampado': 0.3, 'Sólido': 0.2, 'Rayas': 0.1}
+            pattern_weights = {'Floral': 0.45, 'Estampado': 0.30, 'Sólido': 0.15, 'Rayas': 0.10}
         elif season == 'Winter':
-            pattern_weights = {'Sólido': 0.4, 'Cuadros': 0.3, 'Rayas': 0.2, 'Estampado': 0.1}
+            pattern_weights = {'Sólido': 0.45, 'Cuadros': 0.35, 'Rayas': 0.15, 'Estampado': 0.05}
         elif season == 'Spring':
-            pattern_weights = {'Floral': 0.3, 'Estampado': 0.3, 'Sólido': 0.2, 'Rayas': 0.2}
+            pattern_weights = {'Floral': 0.35, 'Estampado': 0.30, 'Sólido': 0.20, 'Rayas': 0.15}
         else:  # Fall
-            pattern_weights = {'Sólido': 0.3, 'Cuadros': 0.3, 'Rayas': 0.2, 'Estampado': 0.2}
+            pattern_weights = {'Sólido': 0.35, 'Cuadros': 0.35, 'Rayas': 0.20, 'Estampado': 0.10}
         
         patterns.append(np.random.choice(
             list(pattern_weights.keys()),
             p=list(pattern_weights.values())
         ))
-        # Estilo
-
-        if season == 'Summer':
-            style_weights = {'Casual': 0.2, 'Deportivo': 0.3, 'Formal': 0.1, 'Playa': 0.4}
-        elif season == 'Winter':
-            style_weights = {'Formal': 0.4, 'Casual': 0.3, 'Deportivo': 0.2, 'Playa': 0.1}
-        elif season == 'Spring':
-            style_weights = {'Casual': 0.4, 'Deportivo': 0.2, 'Formal': 0.3, 'Playa': 0.1}
-        else:  # Fall
-            style_weights = {'Casual': 0.2, 'Deportivo': 0.3, 'Formal': 0.3, 'Playa': 0.2}
+        
+        # Estilo con mapeo específico por temporada y categoría
+        style_key = (season, cat)
+        if style_key in style_mapping:
+            weights = style_mapping[style_key]
+        else:
+            if season == 'Summer':
+                weights = {'Casual': 0.30, 'Deportivo': 0.30, 'Formal': 0.10, 'Playa': 0.30}
+            elif season == 'Winter':
+                weights = {'Formal': 0.45, 'Casual': 0.35, 'Deportivo': 0.15, 'Playa': 0.05}
+            elif season == 'Spring':
+                weights = {'Casual': 0.40, 'Deportivo': 0.25, 'Formal': 0.25, 'Playa': 0.10}
+            else:  # Fall
+                weights = {'Casual': 0.35, 'Deportivo': 0.25, 'Formal': 0.35, 'Playa': 0.05}
         
         styles.append(np.random.choice(
-            list(style_weights.keys()),
-            p=list(style_weights.values())
+            list(weights.keys()),
+            p=list(weights.values())
         ))
-    
+
     # Crear DataFrame
     df = pd.DataFrame({
         'Product_Category': categories,
@@ -325,23 +348,20 @@ def generar_dataset_completo(n_samples=95060, random_state=42):
         'Season': seasons
     })
     
-    # Validación de coherencia
+    # Validación y corrección de combinaciones inválidas
     invalid_combinations = (
-        ((df['Season'] == 'Summer') & (df['Thermal_Rating'] == 'Muy Alto')) |
+        ((df['Season'] == 'Summer') & (df['Thermal_Rating'].isin(['Muy Alto', 'Alto']))) |
         ((df['Season'] == 'Winter') & (df['Product_Category'] == 'Swimwear')) |
-        ((df['Season'] == 'Summer') & (df['Thickness'] == 'Grueso') & 
-         (df['Product_Category'].isin(['Tops', 'Dresses'])))
+        ((df['Season'] == 'Summer') & (df['Thickness'] == 'Grueso')) |
+        ((df['Season'] == 'Winter') & (df['Material_Type'] == 'Lino')) |
+        ((df['Season'] == 'Summer') & (df['Material_Type'] == 'Lana'))
     )
     
     # Corregir combinaciones inválidas
-    df.loc[invalid_combinations, 'Season'] = df.loc[invalid_combinations].apply(
-        lambda row: np.random.choice(['Spring', 'Fall']), axis=1
-    )
+    df.loc[invalid_combinations, ['Season', 'Thermal_Rating', 'Thickness']] = \
+        df.loc[invalid_combinations].apply(corregir_combinacion, axis=1)
     
-    # Guardar dataset
-    df.to_csv('demanda_producto.csv', index=False, sep=';')
-    
-    # Imprimir estadísticas
+    # Calcular y mostrar estadísticas
     print("\n=== Dataset Generado Exitosamente ===")
     print(f"\nNúmero total de registros: {len(df)}")
     
@@ -351,24 +371,16 @@ def generar_dataset_completo(n_samples=95060, random_state=42):
     print("\nDistribución por Categoría de Producto y Temporada:")
     print(pd.crosstab(df['Product_Category'], df['Season'], normalize='index'))
     
-    # Calcular y mostrar el V de Cramér para cada variable
     print("\nFuerza de asociación con Season (V de Cramér):")
     for column in df.select_dtypes(include=['object']).columns:
         if column != 'Season':
             cramers_v = calculate_cramers_v(df[column], df['Season'])
             print(f"{column}: {cramers_v:.3f}")
     
+    # Guardar dataset
+    df.to_csv('demanda_producto.csv', index=False, sep=';')
+    
     return df
-
-def calculate_cramers_v(x, y):
-    """
-    Calcula el coeficiente V de Cramér para variables categóricas
-    """
-    confusion_matrix = pd.crosstab(x, y)
-    chi2 = chi2_contingency(confusion_matrix)[0]  # TODO: Implementar cálculo real
-    n = confusion_matrix.sum().sum()
-    min_dim = min(confusion_matrix.shape) - 1
-    return np.sqrt(chi2 / (n * min_dim)) if min_dim > 0 else 0
 
 # Generar datos
 if __name__ == "__main__":
