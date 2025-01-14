@@ -14,19 +14,19 @@ def crear_modelo(input_shape):
     """
     model = Sequential([
         # Capa de entrada
-        Dense(32, input_dim=input_shape, activation='relu',  # Cambiar input_shape por input_dim
+        Dense(64, input_dim=input_shape, activation='relu', 
               kernel_regularizer=tf.keras.regularizers.l2(0.01)),
         BatchNormalization(),
         Dropout(0.3),
         
         # Primera capa oculta
-        Dense(16, activation='relu', 
+        Dense(32, activation='relu', 
               kernel_regularizer=tf.keras.regularizers.l2(0.01)),
         BatchNormalization(),
         Dropout(0.2),
         
         # Segunda capa oculta
-        Dense(8, activation='relu', 
+        Dense(16, activation='relu', 
               kernel_regularizer=tf.keras.regularizers.l2(0.01)),
         BatchNormalization(),
         Dropout(0.1),

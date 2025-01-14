@@ -31,8 +31,8 @@
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               >
                 <option value="">Seleccione una categoría</option>
-                {% for item in categories.product_categories %}
-                <option value="{{ item }}">{{ item }}</option>
+                {% for category in categories.product_categorys %}
+                <option value="{{ category }}">{{ category }}</option>
                 {% endfor %}
               </select>
             </div>
@@ -65,8 +65,8 @@
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               >
                 <option value="">Seleccione una categoría</option>
-                {% for item in categories.material_categories %}
-                <option value="{{ item }}">{{ item }}</option>
+                {% for category in categories.material_categorys %}
+                <option value="{{ category }}">{{ category }}</option>
                 {% endfor %}
               </select>
             </div>
@@ -96,12 +96,12 @@
               >
               <select
                 name="thickness"
-                required
                 id="thickness"
+                required
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               >
-                {% for item in categories.thicknesses %}
-                <option value="{{ item }}">{{ item }}</option>
+                {% for thickness in categories.thicknesss %}
+                <option value="{{ thickness }}">{{ thickness }}</option>
                 {% endfor %}
               </select>
             </div>
@@ -113,12 +113,12 @@
               >
               <select
                 name="waterproof_rating"
-                required
                 id="waterproof_rating"
+                required
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               >
-                {% for item in categories.waterproof_ratings %}
-                <option value="{{ item }}">{{ item }}</option>
+                {% for rating in categories.waterproof_ratings %}
+                <option value="{{ rating }}">{{ rating }}</option>
                 {% endfor %}
               </select>
             </div>
@@ -130,12 +130,12 @@
               >
               <select
                 name="thermal_rating"
-                required
                 id="thermal_rating"
+                required
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               >
-                {% for item in categories.thermal_ratings %}
-                <option value="{{ item }}">{{ item }}</option>
+                {% for rating in categories.thermal_ratings %}
+                <option value="{{ rating }}">{{ rating }}</option>
                 {% endfor %}
               </select>
             </div>
@@ -147,12 +147,12 @@
               >
               <select
                 name="color_family"
-                required
                 id="color_family"
+                required
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               >
-                {% for item in categories.color_families %}
-                <option value="{{ item }}">{{ item }}</option>
+                {% for color in categories.color_familys %}
+                <option value="{{ color }}">{{ color }}</option>
                 {% endfor %}
               </select>
             </div>
@@ -164,12 +164,12 @@
               >
               <select
                 name="pattern"
-                required
                 id="pattern"
+                required
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               >
-                {% for item in categories.patterns %}
-                <option value="{{ item }}">{{ item }}</option>
+                {% for pattern in categories.patterns %}
+                <option value="{{ pattern }}">{{ pattern }}</option>
                 {% endfor %}
               </select>
             </div>
@@ -181,12 +181,12 @@
               >
               <select
                 name="style"
-                required
                 id="style"
+                required
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               >
-                {% for item in categories.styles %}
-                <option value="{{ item }}">{{ item }}</option>
+                {% for style in categories.styles %}
+                <option value="{{ style }}">{{ style }}</option>
                 {% endfor %}
               </select>
             </div>
@@ -234,14 +234,6 @@
         selectElement.disabled = false;
       }
 
-      // Función para manejar errores de fetch
-      function handleFetchError(error, elementId, defaultMessage) {
-        console.error("Error:", error);
-        const element = document.getElementById(elementId);
-        element.innerHTML = `<option value="">${defaultMessage}</option>`;
-        element.disabled = true;
-      }
-
       // Event listener para categoría de producto
       document
         .getElementById("product_category")
@@ -261,14 +253,16 @@
                   "Seleccione una subcategoría"
                 );
               } else {
-                handleFetchError(
-                  data.error,
-                  "subcategory",
-                  "Error al cargar subcategorías"
-                );
+                console.error("Error:", data.error);
+                subcategorySelect.innerHTML =
+                  '<option value="">Error al cargar subcategorías</option>';
+                subcategorySelect.disabled = true;
               }
             } catch (error) {
-              handleFetchError(error, "subcategory", "Error de conexión");
+              console.error("Error:", error);
+              subcategorySelect.innerHTML =
+                '<option value="">Error de conexión</option>';
+              subcategorySelect.disabled = true;
             }
           } else {
             subcategorySelect.innerHTML =
@@ -296,14 +290,16 @@
                   "Seleccione un tipo de material"
                 );
               } else {
-                handleFetchError(
-                  data.error,
-                  "material_type",
-                  "Error al cargar tipos de material"
-                );
+                console.error("Error:", data.error);
+                materialTypeSelect.innerHTML =
+                  '<option value="">Error al cargar tipos de material</option>';
+                materialTypeSelect.disabled = true;
               }
             } catch (error) {
-              handleFetchError(error, "material_type", "Error de conexión");
+              console.error("Error:", error);
+              materialTypeSelect.innerHTML =
+                '<option value="">Error de conexión</option>';
+              materialTypeSelect.disabled = true;
             }
           } else {
             materialTypeSelect.innerHTML =
@@ -311,34 +307,6 @@
             materialTypeSelect.disabled = true;
           }
         });
-
-      // Función para validar combinaciones antes de enviar
-      function validateCombinations(data) {
-        const invalidCombinations = [
-          {
-            condition:
-              data.product_category === "Swimwear" &&
-              data.material_type === "Lana",
-            message: "Los trajes de baño no pueden ser de lana",
-          },
-          {
-            condition:
-              data.product_category === "Outerwear" &&
-              data.thickness === "Ligero" &&
-              data.thermal_rating === "Muy Alto",
-            message:
-              "Una prenda exterior ligera no puede tener rating térmico muy alto",
-          },
-        ];
-
-        for (const combo of invalidCombinations) {
-          if (combo.condition) {
-            alert(combo.message);
-            return false;
-          }
-        }
-        return true;
-      }
 
       // Event listener para el formulario
       document
@@ -348,10 +316,6 @@
 
           const formData = new FormData(e.target);
           const data = Object.fromEntries(formData);
-
-          if (!validateCombinations(data)) {
-            return;
-          }
 
           try {
             const response = await fetch("/predict", {
@@ -365,7 +329,7 @@
             const result = await response.json();
 
             if (result.success) {
-              displayResults(result.predictions);
+              displayResults(result.predictions, result.recommended_season);
             } else {
               alert("Error: " + result.error);
             }
@@ -376,7 +340,7 @@
         });
 
       // Función para mostrar resultados
-      function displayResults(predictions) {
+      function displayResults(predictions, recommendedSeason) {
         if (chart) {
           chart.destroy();
         }
@@ -426,52 +390,42 @@
         });
 
         const predictionsDiv = document.getElementById("predictions");
-        const maxProbability = Math.max(...Object.values(predictions));
-        const predictedSeason = Object.entries(predictions).find(
-          ([_, value]) => value === maxProbability
-        )[0];
-
-        // Mostrar resumen
         predictionsDiv.innerHTML = `
-                <div class="mb-4 p-4 bg-gray-50 rounded-lg">
-                    <h3 class="text-lg font-semibold mb-2">Resumen de la Predicción</h3>
-                    <p class="text-gray-700">
-                        La temporada más probable es <span class="font-bold text-indigo-600">${predictedSeason}</span>
-                        con una probabilidad del <span class="font-bold text-indigo-600">${maxProbability.toFixed(
-                          1
-                        )}%</span>
-                    </p>
+          <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+            <h3 class="text-lg font-semibold mb-2">Resumen de la Predicción</h3>
+            <p class="text-gray-700">
+              La temporada más probable es <span class="font-bold text-indigo-600">${recommendedSeason}</span>
+              con una probabilidad del <span class="font-bold text-indigo-600">${predictions[
+                recommendedSeason
+              ].toFixed(1)}%</span>
+            </p>
+          </div>
+          ${Object.entries(predictions)
+            .map(
+              ([season, probability]) => `
+              <div class="flex justify-between items-center p-2 ${
+                season === recommendedSeason ? "bg-green-100 rounded" : ""
+              }">
+                <span class="font-medium">${season}</span>
+                <div class="flex items-center">
+                  <div class="w-32 bg-gray-200 rounded-full h-2 mr-2">
+                    <div class="bg-indigo-600 h-2 rounded-full" style="width: ${probability}%"></div>
+                  </div>
+                  <span class="text-lg font-semibold">${probability.toFixed(
+                    1
+                  )}%</span>
                 </div>
-            `;
+              </div>
+            `
+            )
+            .join("")}
+        `;
 
-        // Mostrar todas las probabilidades
-        predictionsDiv.innerHTML += Object.entries(predictions)
-          .map(
-            ([season, probability]) => `
-                    <div class="flex justify-between items-center p-2 ${
-                      probability === maxProbability
-                        ? "bg-green-100 rounded"
-                        : ""
-                    }">
-                        <span class="font-medium">${season}</span>
-                        <div class="flex items-center">
-                            <div class="w-32 bg-gray-200 rounded-full h-2 mr-2">
-                                <div class="bg-indigo-600 h-2 rounded-full" style="width: ${probability}%"></div>
-                            </div>
-                            <span class="text-lg font-semibold">${probability.toFixed(
-                              1
-                            )}%</span>
-                        </div>
-                    </div>
-                `
-          )
-          .join("");
-
-        // Actualizar estilos basados en la temporada predicha
-        updateStyleSuggestions(predictedSeason);
+        // Actualizar sugerencia de estilo si es necesario
+        updateStyleSuggestions(recommendedSeason);
       }
 
-      // Función para actualizar sugerencias de estilo basadas en la temporada
+      // Función para actualizar sugerencias de estilo
       async function updateStyleSuggestions(season) {
         try {
           const response = await fetch(`/get_styles/${season}`);
@@ -481,7 +435,6 @@
             const styleSelect = document.getElementById("style");
             const currentStyle = styleSelect.value;
 
-            // Mantener el estilo actual si es compatible con la temporada
             if (currentStyle && data.styles[currentStyle]) {
               return;
             }
@@ -535,11 +488,22 @@
           }
         });
 
-      // Inicialización
+      // Inicialización del formulario
       document.addEventListener("DOMContentLoaded", function () {
         // Desactivar selects dependientes al inicio
         document.getElementById("subcategory").disabled = true;
         document.getElementById("material_type").disabled = true;
+
+        // Agregar clases de Tailwind a todos los selects
+        document.querySelectorAll("select").forEach((select) => {
+          select.classList.add(
+            "form-select",
+            "border",
+            "rounded-md",
+            "w-full",
+            "p-2"
+          );
+        });
       });
     </script>
   </body>
