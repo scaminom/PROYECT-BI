@@ -39,7 +39,7 @@ def preprocesar_datos(df):
     
     # 5. Separar features y target
     y = df_proc['Profitability_Class']
-    X = df_proc.drop(['Profitability_Class', 'Profit_Margin'], axis=1)
+    X = df_proc.drop(['Profitability_Class'], axis=1)
     
     # 6. Escalamiento robusto para variables numéricas
     columnas_numericas = ['Lead Time Days', 'Typical Weight Per Unit', 'Product_Base_Price',

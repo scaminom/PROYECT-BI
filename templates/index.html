@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Predictor de Rentabilidad</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+</head>
+
+<body class="bg-gray-100">
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8 text-center text-gray-800">
+      Predictor de Rentabilidad
+    </h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- Formulario -->
+      <div class="bg-white p-6 rounded-lg shadow-lg">
+        <h2 class="text-xl font-semibold mb-4">Datos de Entrada</h2>
+        <form id="predictionForm" class="space-y-4">
+          <!-- Características numéricas -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Lead Time (días)</label>
+            <input type="number" name="lead_time" required
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Peso Típico por Unidad</label>
+            <input type="number" step="0.01" name="weight" required
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Precio Base</label>
+            <input type="number" step="0.01" name="base_price" required
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+          </div>
+
+          <!-- Características categóricas -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Buying Group</label>
+            <select name="buying_group" required
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+              {% for group in categories.buying_groups %}
+              <option value="{{ group }}">{{ group }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Categoría de Cliente</label>
+            <select name="customer_category" required
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+              {% for category in categories.customer_categories %}
+              <option value="{{ category }}">{{ category }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Territorio de Ventas</label>
+            <select name="sales_territory" required
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+              {% for territory in categories.sales_territories %}
+              <option value="{{ territory }}">{{ territory }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Continente</label>
+            <select name="continent" required
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+              {% for continent in categories.continents %}
+              <option value="{{ continent }}">{{ continent }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">País</label>
+            <select name="country" required
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+              {% for country in categories.countries %}
+              <option value="{{ country }}">{{ country }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Mes</label>
+            <input type="number" min="1" max="12" name="month" required
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Año Fiscal</label>
+            <input type="number" name="fiscal_year" required
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">¿Es Temporada de Vacaciones?</label>
+            <select name="is_holiday" required
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+              <option value="1">Sí</option>
+              <option value="0">No</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Cantidad</label>
+            <input type="number" name="quantity" required
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Paquete</label>
+            <select name="package" required
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+              {% for package in categories.packages %}
+              <option value="{{ package }}">{{ package }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <button type="submit"
+            class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+            Predecir Rentabilidad
+          </button>
+        </form>
+      </div>
+
+      <!-- Resultados -->
+      <div class="bg-white p-6 rounded-lg shadow-lg">
+        <h2 class="text-xl font-semibold mb-4">Resultados de la Predicción</h2>
+        <div class="relative" style="height: 300px;">
+          <canvas id="resultsChart"></canvas>
+        </div>
+        <div id="predictions" class="mt-4 space-y-2">
+          <!-- Los resultados se mostrarán aquí -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let chart = null;
+
+    document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData);
+
+      try {
+        const response = await fetch('/predict', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          displayResults(result.predictions);
+        } else {
+          alert('Error: ' + result.error);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error al realizar la predicción');
+      }
+    });
+
+    function displayResults(predictions) {
+      // Actualizar el gráfico
+      if (chart) {
+        chart.destroy();
+      }
+
+      const ctx = document.getElementById('resultsChart').getContext('2d');
+      chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(predictions),
+          datasets: [{
+            label: 'Probabilidad (%)',
+            data: Object.values(predictions),
+            backgroundColor: [
+              'rgba(75, 192, 192, 0.6)',  // Alta_Rentabilidad
+              'rgba(54, 162, 235, 0.6)',  // Rentabilidad_Media
+              'rgba(255, 206, 86, 0.6)',  // Baja_Rentabilidad
+              'rgba(255, 99, 132, 0.6)'   // Perdida
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              title: {
+                display: true,
+                text: 'Probabilidad (%)'
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            },
+            title: {
+              display: true,
+              text: 'Probabilidades de Rentabilidad'
+            }
+          }
+        }
+      });
+
+      // Actualizar texto de predicciones
+      const predictionsDiv = document.getElementById('predictions');
+      predictionsDiv.innerHTML = Object.entries(predictions)
+        .map(([key, value]) => `
+          <div class="flex justify-between items-center p-2 ${value === Math.max(...Object.values(predictions)) ? 'bg-green-100 rounded' : ''}">
+            <span class="font-medium">${key.replace(/_/g, ' ')}</span>
+            <div class="flex items-center">
+              <div class="w-32 bg-gray-200 rounded-full h-2 mr-2">
+                <div class="bg-indigo-600 h-2 rounded-full" style="width: ${value}%"></div>
+              </div>
+              <span class="text-lg font-semibold">${value.toFixed(1)}%</span>
+            </div>
+          </div>
+        `).join('');
+
+      // Encontrar la predicción más probable
+      const maxProbability = Math.max(...Object.values(predictions));
+      const mostLikelyClass = Object.entries(predictions).find(([_, value]) => value === maxProbability)[0];
+
+      // Agregar un resumen de la predicción
+      predictionsDiv.insertAdjacentHTML('beforebegin', `
+        <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+          <h3 class="text-lg font-semibold mb-2">Resumen de la Predicción</h3>
+          <p class="text-gray-700">
+            La clase más probable es <span class="font-bold text-indigo-600">${mostLikelyClass.replace(/_/g, ' ')}</span> 
+            con una probabilidad del <span class="font-bold text-indigo-600">${maxProbability.toFixed(1)}%</span>
+          </p>
+        </div>
+      `);
+    }
+
+    // Función para manejar la dependencia entre continente y país
+    document.querySelector('select[name="continent"]').addEventListener('change', function (e) {
+      const selectedContinent = e.target.value;
+      const countrySelect = document.querySelector('select[name="country"]');
+      // Aquí podrías implementar la lógica para filtrar países según el continente seleccionado
+    });
+  </script>
+</body>
+
+</html>

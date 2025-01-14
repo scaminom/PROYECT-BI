@@ -1,8 +1,9 @@
-numpy
-pandas
-tensorflow
-scikit-learn
-matplotlib
-seaBorn
+flask
 imbalanced-learn
 ipykernel
+matplotlib
+numpy
+pandas
+scikit-learn
+seaBorn
+tensorflow
