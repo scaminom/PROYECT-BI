@@ -41,10 +41,10 @@ sns.scatterplot(
     alpha=0.6
 )
 
-plt.title('Visualización t-SNE de los Datos de Rentabilidad')
+plt.title('Visualización t-SNE de los Datos de Temporadas')
 plt.xlabel('t-SNE 1')
 plt.ylabel('t-SNE 2')
-plt.legend(title='Clase de Rentabilidad', bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.legend(title='Clase de temporada', bbox_to_anchor=(1.05, 1), loc='upper left')
 plt.tight_layout()
 plt.savefig('tsne_visualization.png')
 plt.show()
